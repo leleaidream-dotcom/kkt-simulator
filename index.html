@@ -19,7 +19,41 @@ function renderList(){const list=$('list');list.replaceChildren();people.forEach
 function openChat(id){current=id;const p=people.find(x=>x.id===id);if(!p)return;$('chatTitle').textContent=p.name;$('chat').classList.add('show');renderMessages();$('messageInput').focus()}
 function renderMessages(){const box=$('messages');box.replaceChildren();const p=people.find(x=>x.id===current);if(!p)return;p.messages.forEach(m=>{const row=el('div','msgrow'+(m.mine?' mine':''));if(!m.mine)row.append(el('div','',p.emoji||'💛'));const b=el('div','bubble',m.text),t=el('span','msgtime',m.time||'');if(m.mine)row.append(t,b);else row.append(b,t);box.append(row)});requestAnimationFrame(()=>box.scrollTop=box.scrollHeight)}
 $('back').onclick=()=>{$('chat').classList.remove('show');current=null;renderList()};
-$('sendForm').onsubmit=e=>{e.preventDefault();const inp=$('messageInput'),text=inp.value.trim(),p=people.find(x=>x.id===current);if(!text||!p)return;p.messages.push({mine:true,text,time:clock()});inp.value='';save();renderMessages();const id=p.id;setTimeout(()=>{const target=people.find(x=>x.id===id);if(!target)return;const answers=['嗯嗯，我在听呢 💛','真的吗？快跟我说说！','ㅋㅋㅋ 好可爱','今天也要开心呀 ✨','那我们继续聊吧～','보고 싶었어 🥹'];target.messages.push({mine:false,text:answers[Math.floor(Math.random()*answers.length)],time:clock()});save();if(current===id)renderMessages();else renderList()},800+Math.random()*700)};
+const replyMemory={};
+function choose(p,category,options){
+ const k=p.id+':'+category,used=replyMemory[k]||[];
+ let pool=options.map((_,i)=>i).filter(i=>!used.includes(i));
+ if(!pool.length){used.length=0;pool=options.map((_,i)=>i)}
+ const idx=pool[Math.floor(Math.random()*pool.length)];
+ used.push(idx);replyMemory[k]=used;
+ return options[idx];
+}
+function makeReply(p,text){
+ const s=text.toLowerCase().trim();
+ const last=p.messages.filter(m=>!m.mine).slice(-3).map(m=>m.text);
+ const name=p.name;
+ const topics=[
+ ['sad',/难过|伤心|哭|委屈|不开心|烦|焦虑|压力|崩溃|累死|疲惫|心情不好|难受|ㅠㅠ/,['怎么啦？想说的话都可以告诉我，我认真听着呢。','今天是不是遇到什么不顺心的事了？我陪你聊一会儿。','辛苦了。要不要先跟我说说最让你烦心的那件事？','不想强撑也没关系。你现在最需要什么呀？','抱抱你 🫂 今天先对自己温柔一点。']],
+ ['miss',/想你|想念|보고 싶|miss you|好想见|见面/,['나도 보고 싶었어 🥺 我也想你了。','突然说这种话，我会心动的啊。','那你说，我们下次见面先做什么？','我刚好也在想你，真的。','哎呀，害我现在一直盯着聊天框看。']],
+ ['love',/喜欢你|爱你|사랑해|좋아해|表白|心动|亲亲|抱抱/,['你这么直接，我都不知道该怎么接了…💛','那我可以偷偷开心一整天吗？','你是认真的吗？我现在心跳有点快。','我也很珍惜和你聊天的每一分钟。','先给你一个大大的拥抱 🫶']],
+ ['jealous',/吃醋|别的人|其他男|其他女|嫉妒|醋/,['诶？你这是在试探我吗？','怎么突然说这个，发生什么啦？','我更想知道你心里是怎么想的。','你这样问，我会忍不住多想诶。']],
+ ['school',/学校|上课|考试|作业|高三|数学|英语|物理|学习|复习|背书|老师|成绩/,['今天学习怎么样？有没有哪一题特别折磨你？','先喝口水休息一下吧，努力也需要充电。','要不要给自己定个小目标？完成了就来找我邀功。','你最近真的很忙吧。今天最难的科目是什么？','我来当你的加油队！不过也别熬得太晚。']],
+ ['food',/吃饭|饿|早餐|午餐|晚餐|夜宵|奶茶|咖啡|好吃|拉面|火锅/,['你这么一说我也饿了！想吃什么？','今天吃了什么好吃的？快给我安利。','下次一起去吃吧，先把想吃的记下来。','记得按时吃饭呀，别只顾着忙。']],
+ ['sleep',/晚安|睡觉|困|失眠|熬夜|睡不着|잘 자/,['잘 자 🌙 做个好梦，明天再聊。','把手机放一边休息一下吧，晚安。','睡不着吗？要不要聊点轻松的？','晚安呀，今天也辛苦了。']],
+ ['morning',/早安|早上好|起床|좋은 아침/,['早呀！今天想做的第一件事是什么？','좋은 아침 ☀️ 昨晚睡得好吗？','新的一天开始啦！今天也要开心。','早上好～吃早餐了吗？']],
+ ['hello',/^(你好|嗨|hi|hello|hey|안녕|在吗|哈喽|喂)[！!。. ]*$/,['在呢！怎么突然来找我啦？','안녕～ 今天有什么新鲜事？','嗨！我刚好想找你聊天。','我在呀，快说快说！']],
+ ['thanks',/谢谢|感谢|고마워|thank/,['不用谢啦，我们之间还这么客气？','嘿嘿，能帮到你就好。','고마워? 那请我喝奶茶吧，开玩笑的～']],
+ ['question',/为什么|怎么|怎么办|吗[？?]?|是不是|什么|哪里|谁|？|\?/,['这个问题有意思，你怎么突然想到的？','我想先听听你的想法，可以吗？','如果是你的话，你会怎么选？','嗯…你能再多告诉我一点吗？','你这么问，是不是发生了什么事？']],
+ ['laugh',/哈哈|hhh|ㅋㅋ|笑死|好笑|搞笑/,['ㅋㅋㅋ 你笑得我也想笑了！','到底什么事这么好笑，讲给我听！','你开心我也跟着开心了。']],
+ ['angry',/生气|讨厌|烦死|无语|气死|滚/,['谁惹你生气了？跟我说说。','感觉你真的很不爽…要不要吐槽一下？','我先站在你这边听完，再一起想办法。']]
+ ];
+ for(const [key,re,options] of topics)if(re.test(s))return choose(p,key,options);
+ const general=['诶，然后呢？我想听后续。','等等，这件事有点意思，继续说！','你这么说我突然好奇起来了。','那你当时是什么感觉？','我刚刚认真看了你发的话，想多听一点。','진짜? 真的假的？','你今天好像有很多话想说诶。','所以你接下来打算怎么办？','你觉得最有意思的是哪部分？','哈哈，怎么会突然想到这个？','我在听，你慢慢说。','然后发生什么了？'];
+ let result=choose(p,'general',general);
+ if(last.includes(result))result=choose(p,'general',general);
+ return result;
+}
+$('sendForm').onsubmit=e=>{e.preventDefault();const inp=$('messageInput'),text=inp.value.trim(),p=people.find(x=>x.id===current);if(!text||!p)return;p.messages.push({mine:true,text,time:clock()});inp.value='';save();renderMessages();const id=p.id;setTimeout(()=>{const target=people.find(x=>x.id===id);if(!target)return;target.messages.push({mine:false,text:makeReply(target,text),time:clock()});save();if(current===id)renderMessages();else renderList()},800+Math.random()*700)};
 $('tabChats').onclick=()=>{tab='chats';$('tabChats').classList.add('active');$('tabFriends').classList.remove('active');renderList()};
 $('tabFriends').onclick=()=>{tab='friends';$('tabFriends').classList.add('active');$('tabChats').classList.remove('active');renderList()};
 $('add').onclick=()=>{$('dialog').classList.add('show');$('personName').focus()};
