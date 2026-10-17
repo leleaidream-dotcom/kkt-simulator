@@ -148,7 +148,44 @@ function makeReply(p,text){
  if(last.includes(result))result=choose(p,'general',general);
  return result;
 }
-$('sendForm').onsubmit=e=>{e.preventDefault();const inp=$('messageInput'),text=inp.value.trim(),p=people.find(x=>x.id===current);if(!text||!p)return;p.messages.push({mine:true,text,time:clock(),stamp:Date.now()});increaseHeart(p,2);inp.value='';save();renderMessages();$('typingIndicator').textContent=p.name+' 입력 중… · 正在输入';const id=p.id;setTimeout(()=>{const target=people.find(x=>x.id===id);if(!target)return;target.messages.push({mine:false,text:personaReply(target,text),time:clock(),stamp:Date.now()});if(current!==id)target.unread=(target.unread||0)+1;save();if(current===id){$('typingIndicator').textContent='';renderMessages()}else renderList()},800+Math.random()*700)};
+
+const aiUrlKey='kkt_ai_worker_url_v1';
+function configureAI(){
+ const input=prompt('填写 Cloudflare Worker 完整网址（https://...workers.dev）。留空使用原来的模拟回复。不要填写 API Key。',localStorage.getItem(aiUrlKey)||'');
+ if(input===null)return;
+ const url=input.trim();
+ if(url&&!/^https:\/\/[a-z0-9.-]+(?:\/[a-z0-9/_-]*)?$/i.test(url)){alert('请输入完整的 https:// Worker 网址');return}
+ if(url)localStorage.setItem(aiUrlKey,url);else localStorage.removeItem(aiUrlKey);
+ alert(url?'AI 地址已保存！可以发送消息测试了。':'已切回模拟回复。');
+}
+const aiButton=document.createElement('button');
+aiButton.type='button';aiButton.textContent='🤖 AI设置';
+aiButton.style.cssText='border:0;border-radius:14px;background:#fff3a2;padding:7px 10px;margin:4px;cursor:pointer;font-size:13px';
+aiButton.onclick=configureAI;
+$('sendForm').parentNode.insertBefore(aiButton,$('sendForm'));
+async function getAIReply(p,text){
+ const url=localStorage.getItem(aiUrlKey);
+ if(!url)return personaReply(p,text);
+ const recent=p.messages.slice(-12).map(m=>({role:m.mine?'user':'model',text:m.text}));
+ const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text,character:p.name,personality:charFor(p).personality,history:recent})});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw new Error(data.error||('HTTP '+response.status));
+ const answer=data.reply||data.text;
+ if(typeof answer!=='string'||!answer.trim())throw new Error('接口没有返回 reply');
+ return answer.trim();
+}
+$('sendForm').onsubmit=async e=>{
+ e.preventDefault();const inp=$('messageInput'),text=inp.value.trim(),p=people.find(x=>x.id===current);
+ if(!text||!p)return;
+ p.messages.push({mine:true,text,time:clock(),stamp:Date.now()});increaseHeart(p,2);inp.value='';save();renderMessages();
+ $('typingIndicator').textContent=p.name+' 입력 중… · 正在输入';
+ const id=p.id;let answer;
+ try{answer=await getAIReply(p,text)}catch(err){answer='⚠️ AI 连接失败：'+String(err.message||err).slice(0,120)+'。请检查 AI设置 中的 Worker 地址。'}
+ const target=people.find(x=>x.id===id);if(!target)return;
+ target.messages.push({mine:false,text:answer,time:clock(),stamp:Date.now()});
+ if(current!==id)target.unread=(target.unread||0)+1;
+ save();if(current===id){$('typingIndicator').textContent='';renderMessages()}else renderList();
+};
 $('tabChats').onclick=()=>setTab('chats');
 $('tabFriends').onclick=()=>setTab('friends');
 $('add').onclick=()=>{$('dialog').classList.add('show');$('personName').focus()};
