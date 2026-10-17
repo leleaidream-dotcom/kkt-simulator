@@ -89,6 +89,50 @@ body[data-bubble="white"] .mine .bubble{background:#fff}
 .heart-meter{font-size:12px;color:#526879;background:#ffffff80;border-radius:20px;padding:6px 10px;white-space:nowrap}.heart-progress{height:3px;background:#ffffff80;border-radius:6px;margin:0 14px 4px;overflow:hidden}.heart-progress span{display:block;height:100%;width:0;background:#ef91a7;transition:width .3s}.chatbar{padding-bottom:9px}.contact:focus-visible,.chat-tools button:focus-visible{outline:2px solid #d1a900;outline-offset:2px}
 .story-notice{align-self:center;text-align:center;background:#ffffffb3;color:#536477;font-size:12px;border-radius:14px;padding:7px 13px;margin:4px}
 .image-bubble{font-size:48px;min-width:92px;text-align:center}
+
+/* KKT visual polish — soft Korean messenger */
+:root{--surface:#fff;--ink:#25262b;--muted:#8e919a;--accent:#fee65c}
+body{background:#f7f7f5;color:var(--ink);-webkit-tap-highlight-color:transparent}
+main{background:linear-gradient(180deg,#fffdf5 0,#fff 190px);box-shadow:0 0 36px #25304009}
+header{background:transparent;padding-bottom:13px}
+header h1{font-size:29px;letter-spacing:-1.35px}
+header h1 span{display:inline-block;background:#ffeb79;color:#60521a!important;border-radius:8px;padding:4px 7px;vertical-align:middle;transform:translateY(-2px)}
+header button{width:38px;height:38px;border-radius:14px;background:#fff4c9;font-size:26px;display:grid;place-items:center}
+.tabs{background:transparent;gap:26px;padding-bottom:11px}
+.tabs button{position:relative;transition:color .2s}
+.tabs button.active:after{content:"";position:absolute;bottom:1px;left:25%;right:25%;height:3px;background:#f4ce31;border-radius:4px}
+.search-wrap{background:#f5f5f3;border:1px solid #f0f0ed;height:43px;border-radius:15px;margin-top:6px;margin-bottom:15px}
+.contact{margin:3px 12px;width:calc(100% - 24px);padding:13px 12px;border-radius:19px;transition:background .18s,transform .18s}
+.contact:hover{background:#faf9f4}.contact:active{transform:scale(.99)}
+.avatar{box-shadow:inset 0 0 0 1px #ffffff75,0 3px 10px #00000008;border-radius:21px}
+.name{letter-spacing:-.3px}.preview{line-height:1.4}
+.bottom-nav{background:#ffffffed;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-top:1px solid #eeeae0;box-shadow:0 -5px 20px #00000005}
+.bottom-nav button.selected .nav-icon{color:#c39b0b}
+.bottom-nav button{transition:transform .15s}.bottom-nav button:active{transform:scale(.93)}
+.chat,.chatbar{background:#b8cbd9}
+.chatbar{box-shadow:0 2px 8px #5a76830c}
+.chatbar strong{letter-spacing:-.5px}
+.messages{padding:20px 14px 28px;gap:17px;scroll-behavior:smooth}
+.bubble{border-radius:5px 16px 16px 16px;box-shadow:0 2px 8px #435b6b0b;line-height:1.55}
+.mine .bubble{border-radius:16px 5px 16px 16px;background:#fee65c}
+.msgrow{animation:kkt-arrive .2s ease-out}
+@keyframes kkt-arrive{from{opacity:.45;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.day-divider{background:#829ca7a6;padding:6px 15px;border-radius:18px}
+.composer{box-shadow:0 -3px 16px #0000000a;padding-top:12px}
+.composer input{border:1px solid #eaeaea;background:#f8f8f8;border-radius:18px;min-height:43px}
+.composer input:focus{border-color:#eacb50;background:white;box-shadow:0 0 0 3px #ffe97e38}
+.composer button{border-radius:13px;padding:12px 18px}
+.chat-tools{gap:6px;overflow-x:auto;scrollbar-width:none;padding:8px 12px}
+.chat-tools::-webkit-scrollbar{display:none}
+.chat-tools button{white-space:nowrap;border-radius:12px;background:#f6f5f1;padding:8px 11px}
+.profile-sheet,.moments-sheet,.settings-sheet,.editor-sheet,.album-sheet{background:#fdfdfb}
+.sheet-top{backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);border-bottom:1px solid #f0efeb}
+.panel,.moment-card{box-shadow:0 10px 35px #2222220c}
+.moment-card{border-radius:20px}
+.settings-sheet input,.settings-sheet select,.settings-sheet textarea,.editor-sheet .field input,.editor-sheet .field select{border-radius:13px;background:#fff}
+.settings-save,.save-editor,.primary{box-shadow:0 3px 10px #d2b52620}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #e6c63d;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){.msgrow{animation:none}.messages{scroll-behavior:auto}}
 </style></head><body><main><header><h1>채팅 <span style="font-size:12px;font-weight:500;color:#999;letter-spacing:0">KKT</span></h1><button id="add" aria-label="添加聊天对象">＋</button></header><nav class="tabs" aria-label="页面栏目"><button class="active" id="tabChats">채팅 · 聊天</button><button id="tabFriends">친구 · 好友</button></nav><div class="search-wrap"><span>⌕</span><input id="searchContacts" placeholder="친구, 채팅 검색 · 搜索好友" aria-label="搜索好友和聊天"></div><section id="list"></section><p class="hint">KKT · 나만의 작은 대화 공간 ♡<br><small>虚构聊天 · 记录仅保存在本机</small></p><nav class="bottom-nav" aria-label="底部导航"><button id="navFriends"><span class="nav-icon">♟</span><small>친구</small></button><button class="selected" id="navChats"><span class="nav-icon">▤</span><small>채팅</small></button><button id="navDiscover"><span class="nav-icon">◉</span><small>발견</small></button><button id="navMore"><span class="nav-icon">•••</span><small>더보기</small></button></nav></main>
 <section class="chat" id="chat"><div class="chatbar"><button id="back" aria-label="返回">‹</button><strong id="chatTitle"></strong><span class="heart-meter" id="heartMeter">♡ 0</span><button id="clear" title="清空当前聊天">⋯</button></div><div class="heart-progress" aria-label="好感度进度"><span id="heartProgress"></span></div><div class="messages" id="messages"></div><div class="chat-tools"><button id="callBtn">📞 통화</button><button id="albumBtn">▧ 앨범</button><button id="editBtn">✎ 프로필</button><button id="photoBtn">＋ 사진</button></div><div id="typingIndicator" class="typing" aria-live="polite"></div><form class="composer" id="sendForm"><input id="messageInput" placeholder="메시지 보내기 · 发送消息…" autocomplete="off" maxlength="1000"><button type="submit">전송</button></form></section>
 
