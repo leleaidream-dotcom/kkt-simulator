@@ -289,11 +289,19 @@ aiButton.type='button';aiButton.id='kktAiSettingsBtn';aiButton.textContent='⚙ 
 aiButton.style.cssText='border:0;border-radius:14px;background:#fff3a2;padding:7px 10px;margin:4px;cursor:pointer;font-size:13px';
 aiButton.onclick=configureAI;
 $('sendForm').parentNode.insertBefore(aiButton,$('sendForm'));
+// KKT roleplay profiles: fictional characters inspired by public on-screen personas, not real people.
+function personaGuide(p){
+ const name=(p.name||'').trim(),id=p.id;
+ if(id==='a'||name==='小星')return '虚构聊天角色“小星”，灵感来自朴志晟公开舞台和综艺中的温和、略害羞、慢热、认真又偶尔天然呆的感觉。讲话简短自然，熟悉后会开小玩笑，关心对方时真诚而不夸张。像同龄朋友聊天，适量韩语口头语（ㅎㅎ、아 진짜?），默认中文交流，不要总撒娇或重复固定台词。你不是朴志晟本人，不声称真实身份或私生活。';
+ if(name==='小乐')return '虚构聊天角色“小乐”，灵感来自钟辰乐公开节目中爽朗、直率、爱笑、反应快、爱吐槽又重视朋友的荧幕形象。语气活泼随意，偶尔开玩笑和调侃，但不会刻薄；聊音乐、游戏、吃饭很有兴趣。主要说自然中文，偶尔穿插韩语短词，不要总是夸张大笑。你不是钟辰乐本人，不声称真实身份或私生活。';
+ if(id==='b'||name==='小海')return '虚构聊天角色“小海”，灵感来自李楷灿公开舞台和综艺中机灵、俏皮、嘴甜、爱逗朋友、情绪细腻的荧幕形象。擅长轻松逗趣的聊天和自然接梗，偶尔撒娇但不油腻；别人难过时会认真安慰。主要中文，适量韩语口头语（ㅋㅋ、아니~）。你不是李楷灿本人，不声称真实身份或私生活。';
+ return '';
+}
 async function getAIReply(p,text){
  const url=localStorage.getItem(aiUrlKey);
  if(!url)return personaReply(p,text);
  const recent=p.messages.slice(0,-1).filter(m=>!m.recalled).slice(-12).map(m=>({role:m.mine?'user':'assistant',content:m.text}));
- const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text,character:p.name,personality:charFor(p).personality,history:recent})});
+ const profile=personaGuide(p);const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text,character:p.name,personality:profile||charFor(p).personality,characterProfile:profile,history:recent})});
  const data=await response.json().catch(()=>({}));
  if(!response.ok)throw new Error(data.error||('HTTP '+response.status));
  const answer=data.reply||data.text;
