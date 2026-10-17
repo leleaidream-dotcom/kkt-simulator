@@ -37,7 +37,19 @@ header button{font-weight:300;color:#202020;font-size:31px}
 .composer button,.primary{background:var(--k-yellow);border-radius:9px;color:#222;font-weight:600}
 .panel{border-radius:18px}.panel h2{font-size:19px}
 @media(min-width:601px){main{border-left:1px solid #eee;border-right:1px solid #eee}}
-</style></head><body><main><header><h1>채팅 <span style="font-size:12px;font-weight:500;color:#999;letter-spacing:0">KKT</span></h1><button id="add" aria-label="添加聊天对象">＋</button></header><nav class="tabs"><button class="active" id="tabChats">채팅 · 聊天</button><button id="tabFriends">친구 · 好友</button></nav><section id="list"></section><p class="hint">KKT · 나만의 작은 대화 공간 ♡<br><small>虚构聊天 · 记录仅保存在本机</small></p></main>
+
+main{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+.search-wrap{display:flex;align-items:center;gap:8px;background:#f4f4f5;margin:8px 21px 11px;border-radius:9px;padding:0 13px;height:39px;color:#929292}
+.search-wrap span{font-size:26px;line-height:1}.search-wrap input{width:100%;border:0;background:transparent;outline:0;font-size:13px;color:#222}
+.search-wrap input::placeholder{color:#a0a0a0}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;max-width:600px;margin:auto;background:#fafafa;border-top:1px solid #eee;display:flex;justify-content:space-around;padding:9px 0 calc(8px + env(safe-area-inset-bottom));z-index:5}
+.bottom-nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent;color:#9b9b9b;padding:3px 0}
+.bottom-nav button.selected{color:#252525}
+.nav-icon{font-size:25px;height:29px;line-height:27px;font-weight:600}.bottom-nav small{font-size:10px}
+.contact .unread{display:inline-flex;background:#ef6966;color:white;font-size:10px;min-width:17px;height:17px;border-radius:12px;align-items:center;justify-content:center;margin-left:6px}
+.contact .info .name{display:flex;align-items:center}
+.contact .time{white-space:nowrap}
+</style></head><body><main><header><h1>채팅 <span style="font-size:12px;font-weight:500;color:#999;letter-spacing:0">KKT</span></h1><button id="add" aria-label="添加聊天对象">＋</button></header><nav class="tabs" aria-label="页面栏目"><button class="active" id="tabChats">채팅 · 聊天</button><button id="tabFriends">친구 · 好友</button></nav><div class="search-wrap"><span>⌕</span><input id="searchContacts" placeholder="친구, 채팅 검색 · 搜索好友" aria-label="搜索好友和聊天"></div><section id="list"></section><p class="hint">KKT · 나만의 작은 대화 공간 ♡<br><small>虚构聊天 · 记录仅保存在本机</small></p><nav class="bottom-nav" aria-label="底部导航"><button id="navFriends"><span class="nav-icon">♟</span><small>친구</small></button><button class="selected" id="navChats"><span class="nav-icon">▤</span><small>채팅</small></button><button id="navDiscover"><span class="nav-icon">◉</span><small>발견</small></button><button id="navMore"><span class="nav-icon">•••</span><small>더보기</small></button></nav></main>
 <section class="chat" id="chat"><div class="chatbar"><button id="back" aria-label="返回">‹</button><strong id="chatTitle"></strong><button id="clear" title="清空当前聊天">⋯</button></div><div class="messages" id="messages"></div><form class="composer" id="sendForm"><input id="messageInput" placeholder="메시지 보내기 · 发送消息…" autocomplete="off" maxlength="1000"><button type="submit">전송</button></form></section>
 <div class="dialog" id="dialog"><div class="panel"><h2>친구 추가 · 添加好友</h2><label for="personName">昵称</label><input id="personName" placeholder="例如：小星"><label for="personEmoji">头像表情</label><input id="personEmoji" placeholder="例如：🐹" maxlength="8"><div class="actions"><button class="cancel" id="cancel">取消</button><button class="primary" id="save">添加</button></div></div></div>
 <script>
@@ -50,7 +62,7 @@ const $=id=>document.getElementById(id);
 const save=()=>{try{localStorage.setItem(key,JSON.stringify(people))}catch(e){}};
 const clock=()=>new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
 const el=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n};
-function renderList(){const list=$('list');list.replaceChildren();people.forEach(p=>{const row=el('button','contact');row.type='button';row.append(el('div','avatar',p.emoji||'💛'));const info=el('div','info');info.append(el('div','name',p.name));const last=p.messages[p.messages.length-1];info.append(el('div','preview',tab==='friends'?'点击开始聊天':last?last.text:'开始聊天吧'));row.append(info,el('span','time',last&&tab==='chats'?last.time:''));row.onclick=()=>openChat(p.id);list.append(row)});if(!people.length)list.append(el('div','empty','还没有聊天对象，点击右上角 ＋ 添加吧！'))}
+function renderList(){const list=$('list');list.replaceChildren();const q=$('searchContacts').value.trim().toLowerCase();const filtered=people.filter(p=>!q||(p.name+' '+p.messages.map(m=>m.text).join(' ')).toLowerCase().includes(q));const ordered=tab==='chats'?[...filtered].sort((a,b)=>(b.messages[b.messages.length-1]?.stamp||0)-(a.messages[a.messages.length-1]?.stamp||0)):filtered;ordered.forEach(p=>{const row=el('button','contact');row.type='button';row.append(el('div','avatar',p.emoji||'💛'));const info=el('div','info');info.append(el('div','name',p.name));const last=p.messages[p.messages.length-1];info.append(el('div','preview',tab==='friends'?'点击开始聊天':last?last.text:'새로운 대화를 시작해요 · 开始聊天'));row.append(info,el('span','time',last&&tab==='chats'?last.time:''));row.onclick=()=>openChat(p.id);list.append(row)});if(!ordered.length)list.append(el('div','empty',q?'没有找到相关聊天':'还没有聊天对象，点击右上角 ＋ 添加吧！'))}
 function openChat(id){current=id;const p=people.find(x=>x.id===id);if(!p)return;$('chatTitle').textContent=p.name;$('chat').classList.add('show');renderMessages();$('messageInput').focus()}
 function renderMessages(){const box=$('messages');box.replaceChildren();const p=people.find(x=>x.id===current);if(!p)return;p.messages.forEach(m=>{const row=el('div','msgrow'+(m.mine?' mine':''));if(!m.mine)row.append(el('div','',p.emoji||'💛'));const b=el('div','bubble',m.text),t=el('span','msgtime',m.time||'');if(m.mine)row.append(t,b);else row.append(b,t);box.append(row)});requestAnimationFrame(()=>box.scrollTop=box.scrollHeight)}
 $('back').onclick=()=>{$('chat').classList.remove('show');current=null;renderList()};
@@ -88,13 +100,20 @@ function makeReply(p,text){
  if(last.includes(result))result=choose(p,'general',general);
  return result;
 }
-$('sendForm').onsubmit=e=>{e.preventDefault();const inp=$('messageInput'),text=inp.value.trim(),p=people.find(x=>x.id===current);if(!text||!p)return;p.messages.push({mine:true,text,time:clock()});inp.value='';save();renderMessages();const id=p.id;setTimeout(()=>{const target=people.find(x=>x.id===id);if(!target)return;target.messages.push({mine:false,text:makeReply(target,text),time:clock()});save();if(current===id)renderMessages();else renderList()},800+Math.random()*700)};
-$('tabChats').onclick=()=>{tab='chats';$('tabChats').classList.add('active');$('tabFriends').classList.remove('active');renderList()};
-$('tabFriends').onclick=()=>{tab='friends';$('tabFriends').classList.add('active');$('tabChats').classList.remove('active');renderList()};
+$('sendForm').onsubmit=e=>{e.preventDefault();const inp=$('messageInput'),text=inp.value.trim(),p=people.find(x=>x.id===current);if(!text||!p)return;p.messages.push({mine:true,text,time:clock(),stamp:Date.now()});inp.value='';save();renderMessages();const id=p.id;setTimeout(()=>{const target=people.find(x=>x.id===id);if(!target)return;target.messages.push({mine:false,text:makeReply(target,text),time:clock(),stamp:Date.now()});save();if(current===id)renderMessages();else renderList()},800+Math.random()*700)};
+$('tabChats').onclick=()=>setTab('chats');
+$('tabFriends').onclick=()=>setTab('friends');
 $('add').onclick=()=>{$('dialog').classList.add('show');$('personName').focus()};
 $('cancel').onclick=()=>{$('dialog').classList.remove('show')};
 $('save').onclick=()=>{const name=$('personName').value.trim(),emoji=$('personEmoji').value.trim()||'💛';if(!name){alert('先输入昵称哦');return}people.push({id:String(Date.now()),name,emoji,messages:[]});save();$('dialog').classList.remove('show');$('personName').value='';$('personEmoji').value='';renderList()};
 $('clear').onclick=()=>{if(!confirm('要清空这个聊天对象的全部聊天记录吗？'))return;const p=people.find(x=>x.id===current);if(p){p.messages=[];save();renderMessages()}};
+
+function setTab(next){tab=next;$('tabChats').classList.toggle('active',next==='chats');$('tabFriends').classList.toggle('active',next==='friends');$('navChats').classList.toggle('selected',next==='chats');$('navFriends').classList.toggle('selected',next==='friends');$('searchContacts').placeholder=next==='friends'?'친구 검색 · 搜索好友':'채팅 검색 · 搜索聊天';$('searchContacts').value='';renderList()}
+$('navChats').onclick=()=>setTab('chats');
+$('navFriends').onclick=()=>setTab('friends');
+$('navDiscover').onclick=()=>alert('발견 · 发现页即将开放 ✨');
+$('navMore').onclick=()=>alert('더보기 · 更多功能正在准备中 💛');
+$('searchContacts').oninput=renderList;
 save();renderList();
 })();
 </script></body></html>
