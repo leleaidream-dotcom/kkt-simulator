@@ -147,6 +147,33 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .chat-info-panel button.danger{color:#bd4b4b;background:#fff1f1}
 .contact .unread{margin-left:auto;font-weight:700}
 .contact .time{font-variant-numeric:tabular-nums}
+
+/* KKT 4.1 — chat-only visual refinement */
+.chat{background:#b9cad8}
+.chatbar{padding:calc(env(safe-area-inset-top) + 10px) 17px 12px;gap:11px;background:#b9cad8;box-shadow:none}
+.chatbar strong{font-size:19px;font-weight:750;letter-spacing:-.55px}
+.chatbar>button:first-child{font-size:34px;line-height:1;width:30px;padding:0}
+.chatbar .chat-actions button{background:#ffffff40;border:1px solid #ffffff50;border-radius:50%;width:36px;height:36px;display:grid;place-items:center;font-size:17px}
+.heart-meter{background:#ffffff75;border:1px solid #ffffff8a;color:#536777;font-size:11px;font-weight:650;padding:7px 11px}
+.heart-progress{height:2px;background:#ffffff55;margin:0 18px 2px}
+.heart-progress span{background:#ec9eaa}
+.messages{gap:18px;padding:20px 17px 22px;background:linear-gradient(180deg,#b9cad8 0%,#b7c8d6 100%)}
+.msgrow{gap:9px;align-items:flex-end}
+.msgrow:not(.mine)>div:first-child:not(.bubble){width:36px;height:36px;flex-shrink:0;border-radius:14px;background:#f2e8df;box-shadow:0 2px 7px #47586a10}
+.bubble{max-width:min(77%,350px);border-radius:5px 17px 17px 17px;padding:11px 14px;background:#fff;box-shadow:0 3px 12px #445e6a0d;font-size:15px;line-height:1.65;letter-spacing:0;overflow-wrap:anywhere}
+.mine .bubble{border-radius:17px 5px 17px 17px;background:#ffe86d;box-shadow:0 3px 12px #7362250c}
+.msgtime{color:#60778a;font-size:10px;flex-shrink:0;margin-bottom:2px;font-variant-numeric:tabular-nums}
+.day-divider{background:#849cae99;color:white;font-size:11px;border-radius:18px;padding:5px 13px}
+.chat-tools{padding:9px 13px 8px;gap:8px;background:#fff;border-top:1px solid #ffffff}
+.chat-tools button{background:#f6f5f2;color:#61646b;border:1px solid #f2f1ed;border-radius:13px;padding:9px 12px;font-size:12px}
+.typing{background:#fff;min-height:0;padding:0 16px;color:#71808a;font-size:12px}
+.typing:empty{display:none}
+.composer{padding:10px 13px calc(env(safe-area-inset-bottom) + 12px);gap:9px;background:#fff;align-items:center}
+.composer input{background:#f6f7f8;border:1px solid #eceef0;border-radius:20px;min-height:47px;padding:12px 16px;font-size:14px}
+.composer input::placeholder{color:#a4a7ac}
+.composer button{background:#fee45c;border-radius:15px;min-height:46px;padding:10px 17px;font-size:15px;box-shadow:none}
+#kktAiSettingsBtn{align-self:center!important;background:#ffffffb8!important;border:1px solid #ffffffa8!important;border-radius:13px!important;color:#637788!important;font-size:12px!important;padding:7px 12px!important;margin:6px 14px!important;box-shadow:none!important}
+@media(min-width:601px){.chat{left:50%;right:auto;width:min(600px,100%);transform:translateX(-50%);box-shadow:0 0 32px #00000012}}
 </style></head><body><main><header><h1>채팅 <span style="font-size:12px;font-weight:500;color:#999;letter-spacing:0">KKT</span></h1><button id="add" aria-label="添加聊天对象">＋</button></header><nav class="tabs" aria-label="页面栏目"><button class="active" id="tabChats">채팅 · 聊天</button><button id="tabFriends">친구 · 好友</button></nav><div class="search-wrap"><span>⌕</span><input id="searchContacts" placeholder="친구, 채팅 검색 · 搜索好友" aria-label="搜索好友和聊天"></div><section id="list"></section><p class="hint">KKT · 나만의 작은 대화 공간 ♡<br><small>虚构聊天 · 记录仅保存在本机</small></p><nav class="bottom-nav" aria-label="底部导航"><button id="navFriends"><span class="nav-icon">♟</span><small>친구</small></button><button class="selected" id="navChats"><span class="nav-icon">▤</span><small>채팅</small></button><button id="navDiscover"><span class="nav-icon">◉</span><small>발견</small></button><button id="navMore"><span class="nav-icon">•••</span><small>더보기</small></button></nav></main>
 <section class="chat" id="chat"><div class="chatbar"><button id="back" aria-label="返回">‹</button><strong id="chatTitle"></strong><span class="heart-meter" id="heartMeter">♡ 0</span><div class="chat-actions"><button id="chatInfoBtn" title="聊天设置" aria-label="聊天设置">☰</button></div></div><div class="heart-progress" aria-label="好感度进度"><span id="heartProgress"></span></div><div class="messages" id="messages"></div><div class="chat-tools"><button id="callBtn">📞 통화</button><button id="albumBtn">▧ 앨범</button><button id="editBtn">✎ 프로필</button><button id="photoBtn">＋ 사진</button></div><div id="typingIndicator" class="typing" aria-live="polite"></div><form class="composer" id="sendForm"><input id="messageInput" placeholder="메시지 보내기 · 发送消息…" autocomplete="off" maxlength="1000"><button type="submit">전송</button></form></section>
 
@@ -217,7 +244,7 @@ function configureAI(){
  alert(url?'AI 地址已保存！可以发送消息测试了。':'已切回模拟回复。');
 }
 const aiButton=document.createElement('button');
-aiButton.type='button';aiButton.textContent='🤖 AI设置';
+aiButton.type='button';aiButton.id='kktAiSettingsBtn';aiButton.textContent='⚙ AI 设置';
 aiButton.style.cssText='border:0;border-radius:14px;background:#fff3a2;padding:7px 10px;margin:4px;cursor:pointer;font-size:13px';
 aiButton.onclick=configureAI;
 $('sendForm').parentNode.insertBefore(aiButton,$('sendForm'));
