@@ -49,8 +49,39 @@ main{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
 .contact .unread{display:inline-flex;background:#ef6966;color:white;font-size:10px;min-width:17px;height:17px;border-radius:12px;align-items:center;justify-content:center;margin-left:6px}
 .contact .info .name{display:flex;align-items:center}
 .contact .time{white-space:nowrap}
+
+/* Interactive Korean profile, moments and personalization */
+.profile-sheet,.moments-sheet,.settings-sheet{display:none;position:fixed;inset:0;z-index:12;background:#fff;overflow:auto;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+.profile-sheet.show,.moments-sheet.show,.settings-sheet.show{display:block}
+.sheet-top{display:flex;align-items:center;gap:14px;padding:calc(env(safe-area-inset-top) + 15px) 20px 15px;position:sticky;top:0;background:#ffffffed;z-index:2}
+.sheet-top button{background:none;font-size:27px}.sheet-top strong{font-size:19px}
+.profile-cover{height:230px;background:linear-gradient(145deg,#c9d9e7,#e5d8e5);display:flex;align-items:end;justify-content:center;padding-bottom:0}
+.profile-face{width:94px;height:94px;border-radius:35px;background:#fff9;display:grid;place-items:center;font-size:52px;transform:translateY(35px);border:4px solid white}
+.profile-info{text-align:center;padding:49px 20px 20px}.profile-info h2{margin:0 0 8px}.profile-info p{color:#777;font-size:14px}
+.profile-action{display:block;margin:8px auto;padding:12px 26px;border-radius:24px;background:#fee500}
+.moment-card{margin:15px 18px;border:1px solid #eee;border-radius:17px;padding:17px;background:#fff}
+.moment-head{display:flex;align-items:center;gap:10px;font-weight:700}.moment-head span{font-size:25px}
+.moment-card p{white-space:pre-wrap;line-height:1.6;margin:13px 0}
+.moment-actions{display:flex;gap:18px;margin-top:12px}.moment-actions button{background:none;color:#666;font-size:13px}
+.moment-comments{font-size:13px;color:#666;margin:8px 0}.moment-comments div{margin:5px 0}
+.settings-sheet label{display:block;margin:20px 24px 8px;font-size:13px;color:#777}
+.settings-sheet input,.settings-sheet select,.settings-sheet textarea{display:block;margin:0 24px;width:calc(100% - 48px);border:1px solid #ddd;border-radius:10px;padding:12px;background:white;font:inherit}
+.settings-save{display:block;margin:25px 24px;background:#fee500;border-radius:12px;padding:13px;width:calc(100% - 48px)}
+.day-divider{text-align:center;align-self:center;background:#7e96a688;color:#fff;border-radius:15px;padding:5px 15px;font-size:11px;margin:7px 0}
+.typing{font-size:12px;color:#526d7f;padding:0 14px 8px;min-height:20px}
+body[data-theme="pink"] .chat,body[data-theme="pink"] .chatbar{background:#e7cdd9}
+body[data-theme="cream"] .chat,body[data-theme="cream"] .chatbar{background:#e6dfcc}
+body[data-theme="mint"] .chat,body[data-theme="mint"] .chatbar{background:#c9e3dc}
+body[data-bubble="pink"] .mine .bubble{background:#ffc9df}
+body[data-bubble="mint"] .mine .bubble{background:#c5f0dd}
+body[data-bubble="white"] .mine .bubble{background:#fff}
+.profile-link{margin-left:7px;background:transparent;color:#aaa;font-size:12px;padding:2px 4px}
 </style></head><body><main><header><h1>채팅 <span style="font-size:12px;font-weight:500;color:#999;letter-spacing:0">KKT</span></h1><button id="add" aria-label="添加聊天对象">＋</button></header><nav class="tabs" aria-label="页面栏目"><button class="active" id="tabChats">채팅 · 聊天</button><button id="tabFriends">친구 · 好友</button></nav><div class="search-wrap"><span>⌕</span><input id="searchContacts" placeholder="친구, 채팅 검색 · 搜索好友" aria-label="搜索好友和聊天"></div><section id="list"></section><p class="hint">KKT · 나만의 작은 대화 공간 ♡<br><small>虚构聊天 · 记录仅保存在本机</small></p><nav class="bottom-nav" aria-label="底部导航"><button id="navFriends"><span class="nav-icon">♟</span><small>친구</small></button><button class="selected" id="navChats"><span class="nav-icon">▤</span><small>채팅</small></button><button id="navDiscover"><span class="nav-icon">◉</span><small>발견</small></button><button id="navMore"><span class="nav-icon">•••</span><small>더보기</small></button></nav></main>
-<section class="chat" id="chat"><div class="chatbar"><button id="back" aria-label="返回">‹</button><strong id="chatTitle"></strong><button id="clear" title="清空当前聊天">⋯</button></div><div class="messages" id="messages"></div><form class="composer" id="sendForm"><input id="messageInput" placeholder="메시지 보내기 · 发送消息…" autocomplete="off" maxlength="1000"><button type="submit">전송</button></form></section>
+<section class="chat" id="chat"><div class="chatbar"><button id="back" aria-label="返回">‹</button><strong id="chatTitle"></strong><button id="clear" title="清空当前聊天">⋯</button></div><div class="messages" id="messages"></div><div id="typingIndicator" class="typing" aria-live="polite"></div><form class="composer" id="sendForm"><input id="messageInput" placeholder="메시지 보내기 · 发送消息…" autocomplete="off" maxlength="1000"><button type="submit">전송</button></form></section>
+
+<section class="profile-sheet" id="profileSheet"><div class="sheet-top"><button id="profileBack" aria-label="返回">‹</button><strong>프로필 · 个人主页</strong></div><div class="profile-cover"><div class="profile-face" id="profileFace">💛</div></div><div class="profile-info"><h2 id="profileName"></h2><p id="profileStatus">오늘도 좋은 하루 ♡</p><button class="profile-action" id="profileChat">1:1 채팅 · 开始聊天</button></div></section>
+<section class="moments-sheet" id="momentsSheet"><div class="sheet-top"><button id="momentsBack">‹</button><strong>발견 · 动态广场</strong></div><div style="padding:5px 18px"><textarea id="momentText" placeholder="오늘 무슨 일이 있었어? · 分享今天的心情…" maxlength="500" style="width:100%;height:85px;border:1px solid #eee;border-radius:13px;padding:13px;font:inherit;resize:vertical"></textarea><button id="postMoment" class="primary" style="margin-top:8px">＋ 发布动态</button></div><div id="momentsList"></div></section>
+<section class="settings-sheet" id="settingsSheet"><div class="sheet-top"><button id="settingsBack">‹</button><strong>더보기 · 聊天美化</strong></div><label>我的昵称</label><input id="myNickname" maxlength="30" placeholder="나 · 我的昵称"><label>我的状态签名</label><input id="myStatus" maxlength="80" placeholder="오늘도 좋은 하루 ♡"><label>我的头像（表情）</label><input id="myAvatar" maxlength="8" placeholder="🌷"><label>聊天背景</label><select id="themeSelect"><option value="blue">클래식 블루 · 经典蓝</option><option value="pink">벚꽃 핑크 · 樱花粉</option><option value="cream">크림 베이지 · 奶油米</option><option value="mint">민트 · 薄荷绿</option></select><label>我的聊天气泡</label><select id="bubbleSelect"><option value="yellow">카카오 옐로 · 经典黄</option><option value="pink">핑크 · 粉色</option><option value="mint">민트 · 薄荷</option><option value="white">화이트 · 白色</option></select><button id="saveSettings" class="settings-save">저장 · 保存设置</button></section>
 <div class="dialog" id="dialog"><div class="panel"><h2>친구 추가 · 添加好友</h2><label for="personName">昵称</label><input id="personName" placeholder="例如：小星"><label for="personEmoji">头像表情</label><input id="personEmoji" placeholder="例如：🐹" maxlength="8"><div class="actions"><button class="cancel" id="cancel">取消</button><button class="primary" id="save">添加</button></div></div></div>
 <script>
 (()=>{'use strict';
@@ -62,10 +93,10 @@ const $=id=>document.getElementById(id);
 const save=()=>{try{localStorage.setItem(key,JSON.stringify(people))}catch(e){}};
 const clock=()=>new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
 const el=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n};
-function renderList(){const list=$('list');list.replaceChildren();const q=$('searchContacts').value.trim().toLowerCase();const filtered=people.filter(p=>!q||(p.name+' '+p.messages.map(m=>m.text).join(' ')).toLowerCase().includes(q));const ordered=tab==='chats'?[...filtered].sort((a,b)=>(b.messages[b.messages.length-1]?.stamp||0)-(a.messages[a.messages.length-1]?.stamp||0)):filtered;ordered.forEach(p=>{const row=el('button','contact');row.type='button';row.append(el('div','avatar',p.emoji||'💛'));const info=el('div','info');info.append(el('div','name',p.name));const last=p.messages[p.messages.length-1];info.append(el('div','preview',tab==='friends'?'点击开始聊天':last?last.text:'새로운 대화를 시작해요 · 开始聊天'));row.append(info,el('span','time',last&&tab==='chats'?last.time:''));row.onclick=()=>openChat(p.id);list.append(row)});if(!ordered.length)list.append(el('div','empty',q?'没有找到相关聊天':'还没有聊天对象，点击右上角 ＋ 添加吧！'))}
+function renderList(){const list=$('list');list.replaceChildren();const q=$('searchContacts').value.trim().toLowerCase();const filtered=people.filter(p=>!q||(p.name+' '+p.messages.map(m=>m.text).join(' ')).toLowerCase().includes(q));const ordered=tab==='chats'?[...filtered].sort((a,b)=>(b.messages[b.messages.length-1]?.stamp||0)-(a.messages[a.messages.length-1]?.stamp||0)):filtered;ordered.forEach(p=>{const row=el('button','contact');row.type='button';row.append(el('div','avatar',p.emoji||'💛'));const info=el('div','info');info.append(el('div','name',p.name));const last=p.messages[p.messages.length-1];info.append(el('div','preview',tab==='friends'?'点击开始聊天':last?last.text:'새로운 대화를 시작해요 · 开始聊天'));row.append(info,el('span','time',last&&tab==='chats'?last.time:''));row.onclick=()=>openChat(p.id);if(tab==='friends'){const prof=el('button','profile-link','프로필 ›');prof.onclick=e=>{e.stopPropagation();showProfile(p.id)};row.append(prof)}list.append(row)});if(!ordered.length)list.append(el('div','empty',q?'没有找到相关聊天':'还没有聊天对象，点击右上角 ＋ 添加吧！'))}
 function openChat(id){current=id;const p=people.find(x=>x.id===id);if(!p)return;$('chatTitle').textContent=p.name;$('chat').classList.add('show');renderMessages();$('messageInput').focus()}
-function renderMessages(){const box=$('messages');box.replaceChildren();const p=people.find(x=>x.id===current);if(!p)return;p.messages.forEach(m=>{const row=el('div','msgrow'+(m.mine?' mine':''));if(!m.mine)row.append(el('div','',p.emoji||'💛'));const b=el('div','bubble',m.text),t=el('span','msgtime',m.time||'');if(m.mine)row.append(t,b);else row.append(b,t);box.append(row)});requestAnimationFrame(()=>box.scrollTop=box.scrollHeight)}
-$('back').onclick=()=>{$('chat').classList.remove('show');current=null;renderList()};
+function renderMessages(){const box=$('messages');box.replaceChildren();const p=people.find(x=>x.id===current);if(!p)return;let prevDay='';p.messages.forEach(m=>{const day=m.stamp?new Date(m.stamp).toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'}):'이전 대화 · 之前的聊天';if(day!==prevDay){box.append(el('div','day-divider',day));prevDay=day}const row=el('div','msgrow'+(m.mine?' mine':''));if(!m.mine)row.append(el('div','',p.emoji||'💛'));const b=el('div','bubble',m.text),t=el('span','msgtime',m.time||'');if(m.mine)row.append(t,b);else row.append(b,t);box.append(row)});requestAnimationFrame(()=>box.scrollTop=box.scrollHeight)}
+$('back').onclick=()=>{$('chat').classList.remove('show');current=null;$('typingIndicator').textContent='';renderList()};
 const replyMemory={};
 function choose(p,category,options){
  const k=p.id+':'+category,used=replyMemory[k]||[];
@@ -100,7 +131,7 @@ function makeReply(p,text){
  if(last.includes(result))result=choose(p,'general',general);
  return result;
 }
-$('sendForm').onsubmit=e=>{e.preventDefault();const inp=$('messageInput'),text=inp.value.trim(),p=people.find(x=>x.id===current);if(!text||!p)return;p.messages.push({mine:true,text,time:clock(),stamp:Date.now()});inp.value='';save();renderMessages();const id=p.id;setTimeout(()=>{const target=people.find(x=>x.id===id);if(!target)return;target.messages.push({mine:false,text:makeReply(target,text),time:clock(),stamp:Date.now()});save();if(current===id)renderMessages();else renderList()},800+Math.random()*700)};
+$('sendForm').onsubmit=e=>{e.preventDefault();const inp=$('messageInput'),text=inp.value.trim(),p=people.find(x=>x.id===current);if(!text||!p)return;p.messages.push({mine:true,text,time:clock(),stamp:Date.now()});inp.value='';save();renderMessages();$('typingIndicator').textContent=p.name+' 입력 중… · 正在输入';const id=p.id;setTimeout(()=>{const target=people.find(x=>x.id===id);if(!target)return;target.messages.push({mine:false,text:makeReply(target,text),time:clock(),stamp:Date.now()});save();if(current===id){$('typingIndicator').textContent='';renderMessages()}else renderList()},800+Math.random()*700)};
 $('tabChats').onclick=()=>setTab('chats');
 $('tabFriends').onclick=()=>setTab('friends');
 $('add').onclick=()=>{$('dialog').classList.add('show');$('personName').focus()};
@@ -108,11 +139,30 @@ $('cancel').onclick=()=>{$('dialog').classList.remove('show')};
 $('save').onclick=()=>{const name=$('personName').value.trim(),emoji=$('personEmoji').value.trim()||'💛';if(!name){alert('先输入昵称哦');return}people.push({id:String(Date.now()),name,emoji,messages:[]});save();$('dialog').classList.remove('show');$('personName').value='';$('personEmoji').value='';renderList()};
 $('clear').onclick=()=>{if(!confirm('要清空这个聊天对象的全部聊天记录吗？'))return;const p=people.find(x=>x.id===current);if(p){p.messages=[];save();renderMessages()}};
 
+
+const extraKey='kkt-simulator-extras-v1';
+let extras;try{extras=JSON.parse(localStorage.getItem(extraKey))||{}}catch(e){extras={}}
+extras.moments=Array.isArray(extras.moments)?extras.moments:[{id:'sample1',name:'小星',emoji:'🐹',text:'오늘 날씨 진짜 좋다 ☀️\n今天的天气真好，想出去走走。',likes:2,comments:[]}];
+extras.profiles=extras.profiles||{};
+const saveExtras=()=>{try{localStorage.setItem(extraKey,JSON.stringify(extras))}catch(e){}};
+function applyStyle(){document.body.dataset.theme=extras.theme||'blue';document.body.dataset.bubble=extras.bubble||'yellow'}
+function showProfile(id){const p=people.find(x=>x.id===id);if(!p)return;profileId=id;$('profileFace').textContent=p.emoji||'💛';$('profileName').textContent=p.name;$('profileStatus').textContent=extras.profiles[id]||'오늘도 좋은 하루 ♡';$('profileSheet').classList.add('show')}
+let profileId=null;
+$('profileBack').onclick=()=>$('profileSheet').classList.remove('show');
+$('profileChat').onclick=()=>{$('profileSheet').classList.remove('show');openChat(profileId)};
+$('momentsBack').onclick=()=>$('momentsSheet').classList.remove('show');
+$('settingsBack').onclick=()=>$('settingsSheet').classList.remove('show');
+function renderMoments(){const box=$('momentsList');box.replaceChildren();extras.moments.slice().reverse().forEach(post=>{const card=el('article','moment-card');const head=el('div','moment-head');head.append(el('span','',post.emoji||'🌷'),el('strong','',post.name||'나'));card.append(head,el('p','',post.text));const comments=el('div','moment-comments');(post.comments||[]).forEach(c=>comments.append(el('div','',c)));card.append(comments);const actions=el('div','moment-actions');const like=el('button','', '♡ 좋아요 '+(post.likes||0));like.onclick=()=>{post.likes=(post.likes||0)+1;saveExtras();renderMoments()};const comment=el('button','','💬 댓글 · 评论');comment.onclick=()=>{const c=prompt('댓글을 남겨 주세요 · 写下评论');if(!c||!c.trim())return;post.comments=post.comments||[];post.comments.push((extras.nickname||'나')+': '+c.trim().slice(0,200));saveExtras();renderMoments()};actions.append(like,comment);card.append(actions);box.append(card)})}
+$('postMoment').onclick=()=>{const text=$('momentText').value.trim();if(!text)return;extras.moments.push({id:String(Date.now()),name:extras.nickname||'나',emoji:extras.avatar||'🌷',text,likes:0,comments:[]});$('momentText').value='';saveExtras();renderMoments()};
+function openSettings(){$('myNickname').value=extras.nickname||'';$('myStatus').value=extras.status||'';$('myAvatar').value=extras.avatar||'';$('themeSelect').value=extras.theme||'blue';$('bubbleSelect').value=extras.bubble||'yellow';$('settingsSheet').classList.add('show')}
+$('saveSettings').onclick=()=>{extras.nickname=$('myNickname').value.trim();extras.status=$('myStatus').value.trim();extras.avatar=$('myAvatar').value.trim();extras.theme=$('themeSelect').value;extras.bubble=$('bubbleSelect').value;saveExtras();applyStyle();$('settingsSheet').classList.remove('show')};
+applyStyle();
+
 function setTab(next){tab=next;$('tabChats').classList.toggle('active',next==='chats');$('tabFriends').classList.toggle('active',next==='friends');$('navChats').classList.toggle('selected',next==='chats');$('navFriends').classList.toggle('selected',next==='friends');$('searchContacts').placeholder=next==='friends'?'친구 검색 · 搜索好友':'채팅 검색 · 搜索聊天';$('searchContacts').value='';renderList()}
 $('navChats').onclick=()=>setTab('chats');
 $('navFriends').onclick=()=>setTab('friends');
-$('navDiscover').onclick=()=>alert('발견 · 发现页即将开放 ✨');
-$('navMore').onclick=()=>alert('더보기 · 更多功能正在准备中 💛');
+$('navDiscover').onclick=()=>{$('momentsSheet').classList.add('show');renderMoments()};
+$('navMore').onclick=openSettings;
 $('searchContacts').oninput=renderList;
 save();renderList();
 })();
