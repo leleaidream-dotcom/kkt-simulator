@@ -288,7 +288,7 @@ const defaults=[{id:'a',name:'小星',emoji:'🐹',messages:[{mine:false,text:'�
 let people;try{const x=JSON.parse(localStorage.getItem(key));people=Array.isArray(x)?x:defaults}catch(e){people=defaults}
 let current=null,tab='chats';
 const $=id=>document.getElementById(id);
-const save=()=>{try{localStorage.setItem(key,JSON.stringify(people));return true}catch(e){console.warn('KKT 聊天保存失败',e);alert('本机存储空间可能已满，请先导出完整备份，避免新消息丢失。');return false}};
+const save=()=>{try{localStorage.setItem(key,JSON.stringify(people));return true}catch(e){console.warn('KKT 聊天保存失败',e);alert('本机存储空间可能已满，请尽快导出完整备份并整理录音/图片。');return false}};
 const clock=()=>new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
 const el=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n};
 function renderList(){const list=$('list');list.replaceChildren();const q=$('searchContacts').value.trim().toLowerCase();const filtered=people.filter(p=>!q||(p.name+' '+p.messages.map(m=>m.text).join(' ')).toLowerCase().includes(q));const ordered=tab==='chats'?[...filtered].sort((a,b)=>Number(!!b.pinned)-Number(!!a.pinned)||(b.messages[b.messages.length-1]?.stamp||0)-(a.messages[a.messages.length-1]?.stamp||0)):filtered;ordered.forEach(p=>{const row=el('button','contact');row.type='button';const av=el('div','avatar',p.emoji||'💛');if(typeof extras!=='undefined'&&extras?.photos?.[p.id])setAvatar(av,p);row.append(av);const info=el('div','info');info.append(el('div','name',p.name));const last=p.messages[p.messages.length-1];info.append(el('div','preview',tab==='friends'?'点击开始聊天':last?last.text:'새로운 대화를 시작해요 · 开始聊天'));row.append(info,el('span','time',last&&tab==='chats'?(p.pinned?'📌 ':'')+last.time:(p.pinned?'📌':'')));if(tab==='chats'&&p.unread){const badge=el('span','unread',String(Math.min(p.unread,99)));row.append(badge)}row.onclick=()=>openChat(p.id);if(tab==='friends'){const prof=el('button','profile-link','프로필 ›');prof.onclick=e=>{e.stopPropagation();showProfile(p.id)};row.append(prof)}list.append(row)});if(!ordered.length)list.append(el('div','empty',q?'没有找到相关聊天':'还没有聊天对象，点击右上角 ＋ 添加吧！'))}
@@ -380,7 +380,7 @@ async function getAIReply(p,text){
  const url=localStorage.getItem(aiUrlKey);
  if(!url)return personaReply(p,text);
  const recent=p.messages.slice(0,-1).filter(m=>!m.recalled&&!m.voiceId).slice(-16).map(m=>({role:m.mine?'user':'assistant',content:m.text}));
- const profile=kktIdentityGuide(p)+'\n'+personaGuide(p);const memories=(extras.memories[p.id]||[]).slice(-12).join('；');const mood=extras.moods[p.id]||'平静';const context='虚构角色心情：'+mood+'。已记录的用户信息（仅此角色）：'+(memories||'暂无')+'。请自然聊天，不要凭空编造记忆。';const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},signal:AbortSignal.timeout(25000),body:JSON.stringify({message:text,character:p.name,personality:(profile||charFor(p).personality)+'\n'+context,characterProfile:(profile||'')+'\n'+context,memory:memories,mood,history:recent})});
+ const profile=kktIdentityGuide(p)+'\n'+personaGuide(p)+'\n沟通风格：回复短而自然，避免模板化重复，结合最近对话语境和已记录的记忆作答；不要虚构与真人艺人的经历或私事。尊重对方的情感边界。';const memories=(extras.memories[p.id]||[]).slice(-12).join('；');const mood=extras.moods[p.id]||'平静';const context='虚构角色心情：'+mood+'。已记录的用户信息（仅此角色）：'+(memories||'暂无')+'。请自然聊天，不要凭空编造记忆。';const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},signal:AbortSignal.timeout(25000),body:JSON.stringify({message:text,character:p.name,personality:(profile||charFor(p).personality)+'\n'+context,characterProfile:(profile||'')+'\n'+context,memory:memories,mood,history:recent})});
  const data=await response.json().catch(()=>({}));
  if(!response.ok)throw new Error(data.error||('HTTP '+response.status));
  const answer=data.reply||data.text;
@@ -389,7 +389,19 @@ async function getAIReply(p,text){
 }
 const kktChatQueues=new Map();
 const kktWait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-function kktSplitReply(text){const lines=String(text).split(/\n+/).map(x=>x.trim()).filter(Boolean);if(lines.length>1)return lines.slice(0,4);if(text.length<110)return [text];const parts=String(text).match(/[^。！？!?]+[。！？!?]?/g)||[text];if(parts.length<2)return [text];const output=[];let piece='';for(const part of parts){piece+=part;if(piece.length>=25){output.push(piece.trim());piece=''}}if(piece.trim())output.push(piece.trim());return output.length>1?output.slice(0,4):[text]}
+function kktSplitReply(text){
+ const whole=String(text||'').trim();
+ if(!whole)return ['…'];
+ const lines=whole.split(/\n+/).map(x=>x.trim()).filter(Boolean);
+ if(lines.length>1){if(lines.length<=4)return lines;return [...lines.slice(0,3),lines.slice(3).join(' ')]}
+ if(whole.length<110)return [whole];
+ const sentences=(whole.match(/[^。！？!?]+[。！？!?]?/g)||[whole]).map(x=>x.trim()).filter(Boolean);
+ if(sentences.length<2)return [whole];
+ const pieces=[];let buffer='';
+ for(const sentence of sentences){buffer+=sentence;if(buffer.length>=30&&pieces.length<3){pieces.push(buffer.trim());buffer=''}}
+ if(buffer.trim())pieces.push(buffer.trim());
+ return pieces.length?pieces:[whole];
+}
 function kktTyping(name){const indicator=$('typingIndicator');indicator.replaceChildren(document.createTextNode(name+' 입력 중 · 正在输入 '));const dots=el('span','typing-dots');dots.setAttribute('aria-hidden','true');for(let i=0;i<3;i++)dots.append(el('i'));indicator.append(dots)}
 async function kktDeliverReply(id,answer){const target=people.find(x=>x.id===id);if(!target)return;const chunks=answer.startsWith('⚠️')?[answer]:kktSplitReply(answer);for(const chunk of chunks){if(current===id)kktTyping(target.name);await kktWait(Math.min(2100,Math.max(450,chunk.length*32)));if(!people.includes(target))return;target.messages.push({mine:false,text:chunk,time:clock(),stamp:Date.now()});if(current!==id)target.unread=(target.unread||0)+1;save();if(current===id)renderMessages();else renderList()}if(current===id)$('typingIndicator').textContent=''}
 $('sendForm').onsubmit=e=>{
@@ -461,13 +473,34 @@ function renderMoments(){createCharacterMoments();const box=$('momentsList');box
 $('postCharacterMoment').onclick=()=>{if(!people.length)return alert('先添加角色');const choices=people.map((p,i)=>(i+1)+'. '+p.name).join('\\n');const choice=prompt('选择发布动态的角色（输入序号）：\\n'+choices,'1');if(choice===null)return;const p=people[Number(choice)-1];if(!p)return alert('序号不正确');const content=prompt('写下 '+p.name+' 的虚构动态：','오늘도 좋은 하루 💛');if(!content||!content.trim())return;extras.moments.push({id:'char-'+Date.now(),characterId:p.id,name:p.name,emoji:p.emoji,text:content.trim().slice(0,500),likes:0,comments:[]});saveExtras();renderMoments()};
 const momentIdeas=['今天听到一首很好听的歌 🎧','天气不错，想出去散步 ☀️','刚吃完饭，今天也要开心呀 🍚','最近有点想拍照 📷','오늘도 좋은 하루 💛'];function createCharacterMoments(){if(extras.autoMoments.enabled!==true)return;const now=Date.now();if(now-(extras.autoMoments.last||0)<86400000)return;const p=people[Math.floor(Math.random()*people.length)];if(!p)return;extras.moments.push({id:'auto-'+now,characterId:p.id,name:p.name,emoji:p.emoji,text:momentIdeas[Math.floor(Math.random()*momentIdeas.length)],likes:0,comments:[]});extras.autoMoments.last=now;saveExtras()}
 $('postMoment').onclick=()=>{const text=$('momentText').value.trim();if(!text)return;extras.moments.push({id:String(Date.now()),name:extras.nickname||'나',emoji:extras.avatar||'🌷',text,likes:0,comments:[]});$('momentText').value='';saveExtras();renderMoments()};
-function openSettings(){$('autoMomentsEnabled').checked=extras.autoMoments.enabled===true;$('proactiveInterval').value=String(extras.proactiveInterval||30);$('wallpaperSelect').value=extras.wallpaper||'none';$('appearanceSelect').value=extras.appearance||'light';$('proactiveEnabled').checked=extras.proactiveEnabled!==false;$('myNickname').value=extras.nickname||'';$('myStatus').value=extras.status||'';$('myAvatar').value=extras.avatar||'';$('themeSelect').value=extras.theme||'blue';$('bubbleSelect').value=extras.bubble||'yellow';$('settingsSheet').classList.add('show')}
+function openSettings(){$('autoMomentsEnabled').checked=extras.autoMoments.enabled===true;$('proactiveInterval').value=String(extras.proactiveInterval||30);$('wallpaperSelect').value=extras.wallpaper||'none';$('appearanceSelect').value=extras.appearance||'light';$('proactiveEnabled').checked=extras.proactiveEnabled===true;$('myNickname').value=extras.nickname||'';$('myStatus').value=extras.status||'';$('myAvatar').value=extras.avatar||'';$('themeSelect').value=extras.theme||'blue';$('bubbleSelect').value=extras.bubble||'yellow';$('settingsSheet').classList.add('show')}
 $('saveSettings').onclick=()=>{extras.autoMoments.enabled=$('autoMomentsEnabled').checked;extras.proactiveInterval=Number($('proactiveInterval').value);extras.wallpaper=$('wallpaperSelect').value;extras.appearance=$('appearanceSelect').value;extras.proactiveEnabled=$('proactiveEnabled').checked;extras.nickname=$('myNickname').value.trim();extras.status=$('myStatus').value.trim();extras.avatar=$('myAvatar').value.trim();extras.theme=$('themeSelect').value;extras.bubble=$('bubbleSelect').value;saveExtras();applyStyle();$('settingsSheet').classList.remove('show')};
 applyStyle();
 $('wallpaperUpload').onchange=e=>readSmallImage(e.target.files[0],url=>{extras.wallpaperImage=url;saveExtras();applyStyle();alert('壁纸已设置')});
 $('removeWallpaper').onclick=()=>{delete extras.wallpaperImage;saveExtras();applyStyle();alert('已恢复主题壁纸')};
-$('backupAll').onclick=()=>{const payload={app:'KKT',version:7,exportedAt:new Date().toISOString(),people,extras,characters:characterData,aiUrl:localStorage.getItem(aiUrlKey)||''};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='KKT-完整备份-'+new Date().toISOString().slice(0,10)+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000)};
-$('restoreAll').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());if(data.app!=='KKT'||!Array.isArray(data.people)||!data.extras||typeof data.characters!=='object'||!data.characters)throw Error('文件不是有效的 KKT 完整备份');if(!confirm('确定恢复？这会覆盖当前设备的聊天记录、角色和设置。建议先导出当前备份。'))return;localStorage.setItem(key,JSON.stringify(data.people));localStorage.setItem(extraKey,JSON.stringify(data.extras));localStorage.setItem(characterKey,JSON.stringify(data.characters));if(typeof data.aiUrl==='string'&&data.aiUrl)localStorage.setItem(aiUrlKey,data.aiUrl);alert('恢复成功！页面即将刷新');location.reload()}catch(err){alert('恢复失败：'+err.message)}finally{e.target.value=''}};
+$('backupAll').onclick=()=>{const payload={app:'KKT',version:10,exportedAt:new Date().toISOString(),people,extras,characters:characterData,aiUrl:localStorage.getItem(aiUrlKey)||''};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='KKT-完整备份-'+new Date().toISOString().slice(0,10)+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000)};
+$('restoreAll').onchange=async e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ try{
+  if(file.size>30*1024*1024)throw Error('备份文件超过30MB，请确认是否为KKT备份');
+  const data=JSON.parse(await file.text());
+  if(data.app!=='KKT'||!Array.isArray(data.people)||!data.extras||typeof data.extras!=='object'||Array.isArray(data.extras)||!data.characters||typeof data.characters!=='object'||Array.isArray(data.characters))throw Error('这不是有效的KKT完整备份');
+  if(!data.people.every(p=>p&&typeof p.id==='string'&&typeof p.name==='string'&&Array.isArray(p.messages)))throw Error('联系人或聊天记录格式有误');
+  if(!confirm('此备份含 '+data.people.length+' 位角色，创建于 '+(data.exportedAt||'未知时间')+'。恢复会覆盖当前浏览器的聊天、角色与设置。请确保已经导出当前备份。确定继续？'))return;
+  const keys=[key,extraKey,characterKey,aiUrlKey],before=keys.map(k=>localStorage.getItem(k));
+  try{
+   localStorage.setItem(key,JSON.stringify(data.people));
+   localStorage.setItem(extraKey,JSON.stringify(data.extras));
+   localStorage.setItem(characterKey,JSON.stringify(data.characters));
+   if(typeof data.aiUrl==='string') {if(data.aiUrl)localStorage.setItem(aiUrlKey,data.aiUrl);else localStorage.removeItem(aiUrlKey)}
+  }catch(writeError){
+   keys.forEach((k,i)=>{try{if(before[i]===null)localStorage.removeItem(k);else localStorage.setItem(k,before[i])}catch(rollbackError){console.error('KKT回滚失败',k,rollbackError)}});
+   throw Error('恢复写入失败（可能空间不足），已尝试还原原数据：'+writeError.message);
+  }
+  alert('恢复完成，即将刷新页面');location.reload();
+ }catch(err){alert('恢复失败：'+err.message)}
+ finally{e.target.value=''}
+};
 
 const characterKey='kkt-character-3';
 let characterData;try{characterData=JSON.parse(localStorage.getItem(characterKey))||{}}catch(e){characterData={}}
@@ -494,7 +527,25 @@ $('photoBtn').onclick=()=>{$('albumSheet').classList.add('show')};
 $('albumBack').onclick=()=>$('albumSheet').classList.remove('show');
 photoEmojis.forEach(emoji=>{const tile=el('button','album-tile',emoji);tile.onclick=()=>{const p=people.find(x=>x.id===current);if(!p)return;p.messages.push({mine:true,text:emoji,photo:true,time:clock(),stamp:Date.now()});save();renderMessages();$('albumSheet').classList.remove('show')};$('albumGrid').append(tile)});
 const proactiveLines={gentle:['今天过得还好吗？我刚刚想起你了。','有好好吃饭吗？别太累哦 🌷'],playful:['喂喂～今天有什么好玩的事？ㅋㅋ','突然想来找你聊两句！'],cool:['在忙吗？','今天怎么样。'],sweet:['今天有没有想我一点点？♡','突然想听听你的声音…啊，先聊聊天也好。']};
-let proactiveTimer=setInterval(()=>{if(document.hidden||!people.length||extras.proactiveEnabled===false)return;const now=Date.now(),interval=Math.max(10,Number(extras.proactiveInterval)||30)*60000;const candidates=people.filter(p=>p.messages.length>0&&now-(p.lastProactive||0)>=interval);if(!candidates.length)return;const p=candidates[Math.floor(Math.random()*candidates.length)];p.lastProactive=now;const heart=characterData[p.id]?.heart||0,style=characterData[p.id]?.personality||'gentle';const lines=proactiveLines[style]||proactiveLines.gentle;const line=heart>=55&&Math.random()<.45?'오늘 너랑 얘기하고 싶었어 💛':lines[Math.floor(Math.random()*lines.length)];p.messages.push({mine:false,text:line,time:clock(),stamp:now});if(current!==p.id)p.unread=(p.unread||0)+1;save();if(current===p.id)renderMessages();else renderList();},60000);
+let proactiveTimer=setInterval(()=>{
+ if(document.hidden||!people.length||extras.proactiveEnabled!==true)return;
+ const now=Date.now(),hour=new Date().getHours(),interval=Math.max(10,Number(extras.proactiveInterval)||30)*60000;
+ if(hour>=23||hour<8)return; // 自然休息时段，避免深夜打扰
+ const candidates=people.filter(p=>{
+  if(!p.messages.length||now-(p.lastProactive||0)<interval)return false;
+  const lastMine=[...p.messages].reverse().find(m=>m.mine&&m.stamp)?.stamp||0;
+  const lastAny=p.messages[p.messages.length-1]?.stamp||0;
+  return now-lastMine>Math.min(interval,15*60000)&&now-lastAny>Math.min(interval,10*60000);
+ });
+ if(!candidates.length)return;
+ const p=candidates[Math.floor(Math.random()*candidates.length)];
+ p.lastProactive=now;
+ const heart=characterData[p.id]?.heart||0,style=characterData[p.id]?.personality||'gentle',lines=proactiveLines[style]||proactiveLines.gentle;
+ const line=heart>=55&&Math.random()<.45?'今天有点想和你聊聊天。你在忙吗？':lines[Math.floor(Math.random()*lines.length)];
+ p.messages.push({mine:false,text:line,time:clock(),stamp:now,proactive:true});
+ if(current!==p.id)p.unread=(p.unread||0)+1;
+ save();if(current===p.id)renderMessages();else renderList();
+},60000);
 
 function setTab(next){tab=next;$('tabChats').classList.toggle('active',next==='chats');$('tabFriends').classList.toggle('active',next==='friends');$('navChats').classList.toggle('selected',next==='chats');$('navFriends').classList.toggle('selected',next==='friends');$('searchContacts').placeholder=next==='friends'?'친구 검색 · 搜索好友':'채팅 검색 · 搜索聊天';$('searchContacts').value='';renderList()}
 $('navChats').onclick=()=>setTab('chats');
